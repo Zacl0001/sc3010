@@ -1,16 +1,23 @@
 #include <stdio.h>
 #include <string.h>
-#include <arpa/inet.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "ws2_32.lib")
 
 #define PORT 9090
 
 int main() {
-    int sock;
+    WSADATA wsa;
+    SOCKET sock;
     struct sockaddr_in server;
 
     unsigned short payload;
     char data[1024];
     char buffer[2048];
+
+    // Initialize Winsock
+    WSAStartup(MAKEWORD(2,2), &wsa);
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -36,10 +43,15 @@ int main() {
     int len = recv(sock, buffer, sizeof(buffer), 0);
 
     printf("\nReceived (%d bytes):\n", len);
+
+    // Print safely (including non-printable chars)
     for (int i = 0; i < len; i++) {
         printf("%c", buffer[i]);
     }
     printf("\n");
+
+    closesocket(sock);
+    WSACleanup();
 
     return 0;
 }

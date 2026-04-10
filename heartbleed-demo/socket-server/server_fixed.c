@@ -1,17 +1,28 @@
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "ws2_32.lib")
 
 #define PORT 9090
 
 int main() {
-    int server_fd, client_sock;
+    WSADATA wsa;
+    SOCKET server_fd, client_sock;
     struct sockaddr_in server, client;
-    socklen_t c = sizeof(client);
+    int c = sizeof(client);
 
-    char buffer[1024];
+    struct {
+        char buffer[1024];
+        char secret[32];
+    } memory;
+
+    strcpy(memory.secret, "SUPER_SECRET_KEY_12345");
+
     char response[2048];
+
+    WSAStartup(MAKEWORD(2,2), &wsa);
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -24,29 +35,51 @@ int main() {
 
     printf("Fixed server listening on port %d...\n", PORT);
 
-    client_sock = accept(server_fd, (struct sockaddr*)&client, &c);
-
     while (1) {
-        memset(buffer, 0, sizeof(buffer));
-        int received = recv(client_sock, buffer, sizeof(buffer), 0);
 
-        unsigned short payload;
-        memcpy(&payload, buffer, sizeof(unsigned short));
+        client_sock = accept(server_fd, (struct sockaddr*)&client, &c);
+        if (client_sock == INVALID_SOCKET) continue;
 
-        char *data = buffer + sizeof(unsigned short);
-        int actual_data_len = received - sizeof(unsigned short);
+        printf("Client connected\n");
 
-        printf("Received payload length: %hu\n", payload);
+        while (1) {
+            memset(memory.buffer, 0, sizeof(memory.buffer));
 
-        // FIX
-        if (payload > actual_data_len) {
-            printf("Attack detected! Blocking request.\n");
-            continue;
+            int received = recv(client_sock, memory.buffer, sizeof(memory.buffer), 0);
+
+            if (received <= 0) {
+                printf("Client disconnected\n");
+                break;
+            }
+
+            if (received < (int)sizeof(unsigned short)) {
+                printf("Invalid packet\n");
+                continue;
+            }
+
+            unsigned short payload;
+            memcpy(&payload, memory.buffer, sizeof(unsigned short));
+
+            char *data = memory.buffer;
+            int data_len = received - sizeof(unsigned short);
+
+            printf("Received payload length: %hu\n", payload);
+
+            // ✅ PATCH: prevent over-read
+            if (payload > data_len || payload > (int)sizeof(response)) {
+                printf("Blocked: invalid payload (possible attack)\n");
+                continue;
+            }
+
+            memcpy(response, data, payload);
+            send(client_sock, response, payload, 0);
         }
 
-        memcpy(response, data, payload);
-        send(client_sock, response, payload, 0);
+        closesocket(client_sock);
     }
+
+    closesocket(server_fd);
+    WSACleanup();
 
     return 0;
 }

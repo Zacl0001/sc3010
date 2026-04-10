@@ -1,18 +1,28 @@
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "ws2_32.lib")
 
 #define PORT 9090
 
 int main() {
-    int server_fd, client_sock;
+    WSADATA wsa;
+    SOCKET server_fd, client_sock;
     struct sockaddr_in server, client;
-    socklen_t c = sizeof(client);
+    int c = sizeof(client);
 
-    char secret[32] = "SUPER_SECRET_KEY_12345"; // target to leak
-    char buffer[1024];
+    struct {
+        char buffer[1024];
+        char secret[32];
+    } memory;
+
+    strcpy(memory.secret, "SUPER_SECRET_KEY_12345");
+
     char response[2048];
+
+    WSAStartup(MAKEWORD(2,2), &wsa);
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -24,25 +34,40 @@ int main() {
     listen(server_fd, 1);
 
     printf("Vulnerable server listening on port %d...\n", PORT);
+    printf("Secret in memory: %s\n", memory.secret); // debug
+
+   while (1) {
 
     client_sock = accept(server_fd, (struct sockaddr*)&client, &c);
+    if (client_sock == INVALID_SOCKET) continue;
+
+    printf("Client connected\n");
 
     while (1) {
-        memset(buffer, 0, sizeof(buffer));
-        recv(client_sock, buffer, sizeof(buffer), 0);
+        memset(memory.buffer, 0, sizeof(memory.buffer));
+
+        int received = recv(client_sock, memory.buffer, sizeof(memory.buffer), 0);
+
+        if (received <= 0) {
+            printf("Client disconnected\n");
+            break;
+        }
 
         unsigned short payload;
-        memcpy(&payload, buffer, sizeof(unsigned short));
+        memcpy(&payload, memory.buffer, sizeof(unsigned short));
 
-        char *data = buffer + sizeof(unsigned short);
+        char *data = memory.buffer;
 
         printf("Received payload length: %hu\n", payload);
 
-        // ❌ VULNERABILITY (Heartbleed-style)
         memcpy(response, data, payload);
-
         send(client_sock, response, payload, 0);
     }
+
+    closesocket(client_sock);
+}
+    closesocket(server_fd);
+    WSACleanup();
 
     return 0;
 }
