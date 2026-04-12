@@ -12,7 +12,7 @@ gcc server_vuln.c -o server_vuln -lws2_32
 gcc server_fixed.c -o server_fixed -lws2_32
 ```
 
-# Running the Vulnerable Server
+## Running the Vulnerable Server
 Open two terminals.
 In the first terminal, start the vulnerable server:
 ```bash
@@ -28,7 +28,7 @@ Payload length: 1100
 <br>
 Data: A
 
-# Running the Fixed Server
+## Running the Fixed Server
 Stop the vulnerable server.
 Open two terminals again.
 In the first terminal, start the fixed server:
