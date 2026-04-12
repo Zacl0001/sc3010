@@ -23,7 +23,9 @@ In the second terminal, run the client:
 ./client
 ```
 Test with the following input:
+<br>
 Payload length: 1100
+<br>
 Data: A
 
 # Running the Fixed Server
@@ -39,5 +41,7 @@ In the second terminal, run the client:
 ```
 
 Test with the same input:
+<br>
 Payload length: 1100
+<br>
 Data: A
