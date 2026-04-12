@@ -1,4 +1,4 @@
-# SC3010 – Buffer Overflow Demo (Client/Server)
+# SC3010 – Heartbleed Demo (Client/Server)
 
 This project demonstrates a vulnerable server and a fixed server implementation using sockets on Windows.
 
