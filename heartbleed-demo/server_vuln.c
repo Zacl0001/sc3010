@@ -56,7 +56,7 @@ int main() {
         unsigned short payload;
         memcpy(&payload, memory.buffer, sizeof(unsigned short));
 
-        char *data = memory.buffer;
+        char *data = memory.buffer + sizeof(unsigned short);
 
         printf("Received payload length: %hu\n", payload);
 
