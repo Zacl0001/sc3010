@@ -1,4 +1,4 @@
-# SC3010 – Buffer Overflow Demo (Client/Server)
+# SC3010 – Heartbleed Demo (Client/Server)
 
 This project demonstrates a vulnerable server and a fixed server implementation using sockets on Windows.
 
@@ -12,7 +12,7 @@ gcc server_vuln.c -o server_vuln -lws2_32
 gcc server_fixed.c -o server_fixed -lws2_32
 ```
 
-# Running the Vulnerable Server
+## Running the Vulnerable Server
 Open two terminals.
 In the first terminal, start the vulnerable server:
 ```bash
@@ -23,10 +23,12 @@ In the second terminal, run the client:
 ./client
 ```
 Test with the following input:
+<br>
 Payload length: 1100
+<br>
 Data: A
 
-# Running the Fixed Server
+## Running the Fixed Server
 Stop the vulnerable server.
 Open two terminals again.
 In the first terminal, start the fixed server:
@@ -39,5 +41,7 @@ In the second terminal, run the client:
 ```
 
 Test with the same input:
+<br>
 Payload length: 1100
+<br>
 Data: A
